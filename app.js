@@ -1,83 +1,142 @@
 const express = require('express');
-const mathUtils = require('./utils/mathUtils');
-const userService = require('./services/userService');
-
 const app = express();
 const PORT = 3000;
 
+// Enable JSON body parsing
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the Node.js Debugger Demo!');
-});
+// Collection of debugging scenarios
+const debuggingScenarios = {
+  // Scenario 1: Simple bug in calculation
+  buggyAdd: function(a, b) {
+    // Bug: When a is 0, it doesn't add correctly
+    if (a === 0) {
+      return b;
+    }
+    return a + b;
+  },
 
-app.get('/calculate/:operation', (req, res) => {
-  const { operation } = req.params;
-  const { a, b } = req.query;
+  // Scenario 2: Loop debugging
+  sumArray: function(arr) {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) {
+      // Watch how the sum changes with each iteration
+      sum += arr[i];
+    }
+    return sum;
+  },
 
-  const num1 = parseInt(a, 10);
-  const num2 = parseInt(b, 10);
+  // Scenario 3: Async code debugging
+  asyncOperation: async function(id) {
+    console.log("Starting async operation");
 
-  let result;
+    // Artificial delay to simulate network request
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-  try {
-    switch (operation) {
-      case 'add':
-        result = mathUtils.add(num1, num2);
-        break;
-      case 'subtract':
-        result = mathUtils.subtract(num1, num2);
-        break;
-      case 'multiply':
-        result = mathUtils.multiply(num1, num2);
-        break;
-      case 'divide':
-        result = mathUtils.divide(num1, num2);
-        break;
-      default:
-        return res.status(400).json({ error: 'Invalid operation' });
+    // Different behavior based on ID
+    if (id === 3) {
+      // Adding another delay for specific ID
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return { id: 3, name: "Special User", delayed: true };
     }
 
-    res.json({ operation, num1, num2, result });
+    return { id: id, name: `User ${id}` };
+  },
+
+  // Scenario 4: Error handling
+  divideNumbers: function(a, b) {
+    // Will throw error when b is 0
+    if (b === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    return a / b;
+  }
+};
+
+// Routes to demonstrate debugging
+
+// Home route
+app.get('/', (req, res) => {
+  res.send('Node.js Debugger POC - Try the different endpoints to practice debugging');
+});
+
+// Scenario 1: Debug calculation bug
+app.get('/add', (req, res) => {
+  const a = parseInt(req.query.a || 0);
+  const b = parseInt(req.query.b || 0);
+
+  const result = debuggingScenarios.buggyAdd(a, b);
+
+  res.json({
+    operation: 'add',
+    a: a,
+    b: b,
+    result: result,
+    expected: a + b
+  });
+});
+
+// Scenario 2: Debug loop
+app.get('/sum-array', (req, res) => {
+  // Create array from elements in query string or use default
+  const numbers = req.query.numbers
+    ? req.query.numbers.split(',').map(n => parseInt(n))
+    : [1, 2, 3, 4, 5];
+
+  const result = debuggingScenarios.sumArray(numbers);
+
+  res.json({
+    operation: 'sum-array',
+    input: numbers,
+    result: result
+  });
+});
+
+// Scenario 3: Debug async code
+app.get('/async/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const startTime = Date.now();
+
+    const result = await debuggingScenarios.asyncOperation(id);
+
+    const duration = Date.now() - startTime;
+
+    res.json({
+      operation: 'async-operation',
+      id: id,
+      result: result,
+      duration_ms: duration
+    });
   } catch (error) {
-    console.error('Calculation error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/users/:id', async (req, res) => {
+// Scenario 4: Debug error handling
+app.get('/divide', (req, res) => {
   try {
-    const userId = parseInt(req.params.id, 10);
-    const user = await userService.getUserById(userId);
+    const a = parseInt(req.query.a || 0);
+    const b = parseInt(req.query.b || 1);
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const result = debuggingScenarios.divideNumbers(a, b);
 
-    res.json(user);
+    res.json({
+      operation: 'divide',
+      a: a,
+      b: b,
+      result: result
+    });
   } catch (error) {
-    console.error('Error fetching user:', error.message);
-    res.status(500).json({ error: 'Failed to fetch user data' });
+    res.status(400).json({
+      operation: 'divide',
+      error: error.message
+    });
   }
 });
 
-app.post('/users', async (req, res) => {
-  try {
-    const { name, email, age } = req.body;
-
-    if (!name || !email) {
-      return res.status(400).json({ error: 'Name and email are required' });
-    }
-
-    const newUser = await userService.createUser({ name, email, age });
-    res.status(201).json(newUser);
-  } catch (error) {
-    console.error('Error creating user:', error.message);
-    res.status(500).json({ error: 'Failed to create user' });
-  }
-});
-
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log('Ready for debugging!');
+  console.log(`Debugger POC running at http://localhost:${PORT}`);
+  console.log('Ready for debugging practice!');
 });
