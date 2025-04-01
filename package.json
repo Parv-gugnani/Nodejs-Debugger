@@ -1,0 +1,18 @@
+{
+  "name": "nodejs-debugger-demo",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "debug": "node --inspect app.js",
+    "debug-brk": "node --inspect-brk app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "A simple Node.js application to demonstrate debugging techniques",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
