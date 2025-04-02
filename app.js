@@ -20,7 +20,6 @@ const debuggingScenarios = {
   sumArray: function(arr) {
     let sum = 0;
     for (let i = 0; i < arr.length; i++) {
-      // Watch how the sum changes with each iteration
       sum += arr[i];
     }
     return sum;
@@ -30,12 +29,9 @@ const debuggingScenarios = {
   asyncOperation: async function(id) {
     console.log("Starting async operation");
 
-    // Artificial delay to simulate network request
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Different behavior based on ID
     if (id === 3) {
-      // Adding another delay for specific ID
       await new Promise(resolve => setTimeout(resolve, 2000));
       return { id: 3, name: "Special User", delayed: true };
     }
@@ -45,7 +41,6 @@ const debuggingScenarios = {
 
   // Scenario 4: Error handling
   divideNumbers: function(a, b) {
-    // Will throw error when b is 0
     if (b === 0) {
       throw new Error("Cannot divide by zero");
     }
